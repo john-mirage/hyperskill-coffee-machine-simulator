@@ -1,142 +1,173 @@
 package machine;
 
 public class CoffeeMachine {
-    private enum State {
-        CHOOSING_AN_ACTION,
-        CHOOSING_A_TYPE_OF_COFFEE,
-        FILLING_WITH_WATER,
-        FILLING_WITH_MILK,
-        FILLING_WITH_BEANS,
-        FILLING_WITH_CUPS
+    private State currentState;
+    private int water;
+    private int milk;
+    private int beans;
+    private int cups;
+    private int cash;
+    private boolean hasUser;
+
+    public CoffeeMachine(int water, int milk, int beans, int cups, int cash) throws IllegalArgumentException {
+        if (water < 0 || milk < 0 || beans < 0 || cups < 0 || cash < 0) {
+            throw new IllegalArgumentException("Water, milk, beans, cups and cash must not be negative");
+        }
+        this.currentState = State.CHOOSING_AN_ACTION;
+        this.water = water;
+        this.milk = milk;
+        this.beans = beans;
+        this.cups = cups;
+        this.cash = cash;
+        this.hasUser = true;
     }
 
-    private static State state = State.CHOOSING_AN_ACTION;
-    private static int water = 400;
-    private static int milk = 540;
-    private static int beans = 120;
-    private static int cups = 9;
-    private static int cash = 550;
+    public State getCurrentState() {
+        return this.currentState;
+    }
 
-    public static void process(String input) {
-        switch (state) {
-            case CHOOSING_AN_ACTION: {
-                switch (input) {
-                    case "buy": {
-                        System.out.println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino, back - to main menu:");
-                        state = State.CHOOSING_A_TYPE_OF_COFFEE;
-                        break;
-                    }
-                    case "fill": {
-                        System.out.println("Write how many ml of water you want to add:");
-                        state = State.FILLING_WITH_WATER;
-                        break;
-                    }
-                    case "take": {
-                        System.out.printf("I gave you $%d%n", cash);
-                        cash = 0;
-                        break;
-                    }
-                    case "remaining": {
-                        System.out.printf("""
-                                The coffee machine has:
-                                %d ml of water
-                                %d ml of milk
-                                %d g of coffee beans
-                                %d disposable cups
-                                $%d of money
-                                """, water, milk, beans, cups, cash);
-                        break;
-                    }
-                    default: {
-                        System.out.println("Invalid choice");
-                    }
-                }
-                break;
-            }
-            case CHOOSING_A_TYPE_OF_COFFEE: {
-                switch (input) {
-                    case "1": {
-                        if (water >= 250 && beans >= 16 && cups >= 1) {
-                            water -= 250;
-                            beans -= 16;
-                            cups -= 1;
-                            cash += 4;
-                            System.out.println("I have enough resources, making you a coffee!");
-                        } else {
-                            System.out.println("Sorry, not enough components!");
-                        }
-                        System.out.println("Write action (buy, fill, take, remaining, exit):");
-                        state = State.CHOOSING_AN_ACTION;
-                        break;
-                    }
-                    case "2": {
-                        if (water >= 350 && milk >= 75 && beans >= 20 && cups >= 1) {
-                            water -= 350;
-                            milk -= 75;
-                            beans -= 20;
-                            cups -= 1;
-                            cash += 7;
-                            System.out.println("I have enough resources, making you a coffee!");
-                        } else {
-                            System.out.println("Sorry, not enough components!");
-                        }
-                        System.out.println("Write action (buy, fill, take, remaining, exit):");
-                        state = State.CHOOSING_AN_ACTION;
-                        break;
-                    }
-                    case "3": {
-                        if (water >= 200 && milk >= 100 && beans >= 12 && cups >= 1) {
-                            water -= 200;
-                            milk -= 100;
-                            beans -= 12;
-                            cups -= 1;
-                            cash += 6;
-                            System.out.println("I have enough resources, making you a coffee!");
-                        } else {
-                            System.out.println("Sorry, not enough components!");
-                        }
-                        System.out.println("Write action (buy, fill, take, remaining, exit):");
-                        state = State.CHOOSING_AN_ACTION;
-                        break;
-                    }
-                    case "back": {
-                        System.out.println("Write action (buy, fill, take, remaining, exit):");
-                        state = State.CHOOSING_AN_ACTION;
-                        break;
-                    }
-                    default: {
-                        System.out.println("Invalid choice");
-                    }
-                }
-                break;
-            }
-            case FILLING_WITH_WATER: {
-                water += Integer.parseInt(input);
-                System.out.println("Write how many ml of milk you want to add:");
-                state = State.FILLING_WITH_MILK;
-                break;
-            }
-            case FILLING_WITH_MILK: {
-                milk += Integer.parseInt(input);
-                System.out.println("Write how many grams of coffee beans you want to add:");
-                state = State.FILLING_WITH_BEANS;
-                break;
-            }
-            case FILLING_WITH_BEANS: {
-                beans += Integer.parseInt(input);
-                System.out.println("Write how many disposable cups you want to add:");
-                state = State.FILLING_WITH_CUPS;
-                break;
-            }
-            case FILLING_WITH_CUPS: {
-                cups += Integer.parseInt(input);
-                System.out.println("Write action (buy, fill, take, remaining, exit):");
-                state = State.CHOOSING_AN_ACTION;
-                break;
-            }
-            default: {
-                System.out.println("Invalid state");
-            }
+    public boolean hasUser() {
+        return this.hasUser;
+    }
+
+    private void checkCommand(String command) throws IllegalArgumentException {
+        if (command == null || command.isEmpty()) {
+            throw new IllegalArgumentException("Command cannot be null or empty");
         }
+    }
+
+    private void chooseAction(String command) throws IllegalArgumentException {
+        this.checkCommand(command);
+        switch (command) {
+            case "buy":
+                this.currentState = State.CHOOSING_A_TYPE_OF_COFFEE;
+                break;
+            case "fill":
+                this.currentState = State.FILLING_WITH_WATER;
+                break;
+            case "take":
+                System.out.printf("I gave you $%d%n", this.cash);
+                this.cash = 0;
+                break;
+            case "remaining":
+                System.out.println(this);
+                break;
+            case "exit":
+                this.hasUser = false;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid command");
+        }
+    }
+
+    private void makeCoffee(Coffee coffee) {
+        if (
+            this.water >= coffee.getWater() &&
+            this.milk >= coffee.getMilk() &&
+            this.beans >= coffee.getBeans() &&
+            this.cups >= 1
+        ) {
+            this.water -= coffee.getWater();
+            this.milk -= coffee.getMilk();
+            this.beans -= coffee.getBeans();
+            this.cups -= 1;
+            this.cash += coffee.getPrice();
+            System.out.println("I have enough resources, making you a coffee!");
+        } else {
+            System.out.println("Sorry, not enough components!");
+        }
+        currentState = State.CHOOSING_AN_ACTION;
+    }
+
+    private void chooseATypeOfCoffee(String command) throws IllegalArgumentException {
+        this.checkCommand(command);
+        switch (command) {
+            case "1":
+                this.makeCoffee(Coffee.ESPRESSO);
+                break;
+            case "2":
+                this.makeCoffee(Coffee.LATTE);
+                break;
+            case "3":
+                this.makeCoffee(Coffee.CAPPUCCINO);
+                break;
+            case "back":
+                this.currentState = State.CHOOSING_AN_ACTION;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid command");
+        }
+    }
+
+    private int getAmountFromCommand(String command) throws IllegalArgumentException {
+        this.checkCommand(command);
+        try {
+            int number = Integer.parseInt(command);
+            if (number >= 0) {
+                return number;
+            } else {
+                throw new IllegalArgumentException("Command is a negative number");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Command is not a number");
+        }
+    }
+
+    private void fillWithWater(String command) {
+        this.water += this.getAmountFromCommand(command);
+        this.currentState = State.FILLING_WITH_MILK;
+    }
+
+    private void fillWithMilk(String command) {
+        this.milk += this.getAmountFromCommand(command);
+        this.currentState = State.FILLING_WITH_BEANS;
+    }
+
+    private void fillWithBeans(String command) {
+        this.beans += this.getAmountFromCommand(command);
+        this.currentState = State.FILLING_WITH_CUPS;
+    }
+
+    private void fillWithCups(String command) {
+        this.cups += this.getAmountFromCommand(command);
+        this.currentState = State.CHOOSING_AN_ACTION;
+    }
+
+    public void execute(String command) {
+        this.checkCommand(command);
+        switch (currentState) {
+            case CHOOSING_AN_ACTION:
+                this.chooseAction(command);
+                break;
+            case CHOOSING_A_TYPE_OF_COFFEE:
+                this.chooseATypeOfCoffee(command);
+                break;
+            case FILLING_WITH_WATER:
+                this.fillWithWater(command);
+                break;
+            case FILLING_WITH_MILK:
+                this.fillWithMilk(command);
+                break;
+            case FILLING_WITH_BEANS:
+                this.fillWithBeans(command);
+                break;
+            case FILLING_WITH_CUPS:
+                this.fillWithCups(command);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid state");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return """
+            The coffee machine has:
+            %d ml of water
+            %d ml of milk
+            %d g of coffee beans
+            %d disposable cups
+            $%d of money
+            """.formatted(this.water, this.milk, this.beans, this.cups, this.cash);
     }
 }
