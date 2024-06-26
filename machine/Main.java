@@ -1,18 +1,12 @@
 package machine;
 
-import java.util.Scanner;
-
 public class Main {
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Write action (buy, fill, take, remaining, exit):");
-        while (true) {
-            String input = scanner.nextLine();
-            if (input.equals("exit")) {
-                break;
-            } else {
-                CoffeeMachine.process(input);
-            }
+        CoffeeMachine coffeeMachine = new CoffeeMachine(400, 540, 120, 9, 550);
+        while (coffeeMachine.hasUser()) {
+            String message = coffeeMachine.getCurrentState().getMessage();
+            String command = UserInterface.askForCommand(message);
+            coffeeMachine.execute(command);
         }
     }
 }
